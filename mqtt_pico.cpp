@@ -48,7 +48,7 @@ static void mqtt_recebendo_publicacao_cb(
     uint32_t tamanho    // Tamanho do nome do tópico
 );
 
-/ Callback executado quando uma operação MQTT é concluída, informando sucesso ou erro da requisição
+// Callback executado quando uma operação MQTT é concluída, informando sucesso ou erro da requisição
 static void mqtt_requisicao_cb(
     void *arg,  // Permite receber dados genéricos definidos pelo usuário
     err_t error // Sinaliza sucesso ou erro da requisição MQTT
@@ -157,23 +157,27 @@ static void mqtt_dados_recebidos_cb(void *arg, const uint8_t *dados, uint16_t ta
     printf("Recebido: %.*s\n", tamanho, dados);
 
     char mensagem[20];
+    
+    // Verificar se a mensagem cabe no buffer
     if (tamanho >= sizeof(mensagem)) {
         printf("Mensagem muito grande\n");
         cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
         return;
     }
 
+    // Copia os bytes recebidos pelo MQTT para o buffer mensagem
     memcpy(mensagem, dados, tamanho);
+    // Adiciona o terminador de string para permitir operações com texto
     mensagem[tamanho] = '\0';
     int intervalo_segundos;
 
     if(mensagem_inteiro_positivo(mensagem, &intervalo_segundos)) {
+        // Configura o intervalo do LED
         intervalo_led_ms = intervalo_segundos * 1000;
         timer_ativo = true;
         printf("Intervalo configurado: %d segundos\n", intervalo_segundos);
         return;
     }
-
     printf("Valor inválido\n");
 
     timer_ativo = false;
@@ -204,6 +208,7 @@ bool mensagem_inteiro_positivo(const char *texto, int *valor_saida) {
 
     int valor = 0;
     for(int i = 0; texto[i] != '\0'; i++) {
+        // Verifica se o caractere atual não é um dígito numérico
         if(texto[i] < '0' || texto[i] > '9') {
             return false;
         }
